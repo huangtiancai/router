@@ -46,7 +46,7 @@ history
 - History 路由
 - Hash 路由
 
-###  History 路由
+### History 路由
 ```
 history.length
 history.length 只读属性
@@ -79,6 +79,9 @@ history.replaceState(state Object,title,url)
 2.不同之处在于: pushState 会增加一条新的历史记录，而 replaceState 则会替换当前的历史记录
 ```
 
+### Hash 路由
+url中的 # => 文章的各个标题之间的跳转等等 => 锚点
+路由里面的 # 不叫锚点 => hash => hash值发生变化时,可以通过 hashchange 事件监听到，从而在回调函数里面触发某些方法
 
 
 

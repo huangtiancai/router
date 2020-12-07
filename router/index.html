@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单版-单页面路由(原生js模拟Vue路由切换)</title>
+    <style>
+        .router_box,
+        #router-view {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .router_box>a {
+            padding: 0 10px;
+            color: #42b983;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="router_box">
+        <a href="/home" class="router">主页</a>
+        <a href="/product" class="router">产品</a>
+        <a href="/news" class="router">新闻</a>
+        <a href="/about" class="router">关于</a>
+    </div>
+    <div id="router-view"></div>
+
+    <script>
+        function Vue(parameters) {
+            let vue = {}
+            // 增加 routes 属性
+            vue.routes = parameters.routes || []
+            console.log(vue.routes)  // Array
+            // 初始化函数
+            vue.init = function () {
+                console.log(document.querySelectorAll('.router'))   // NodeList(4)
+                // 导航标签遍历操作
+                document.querySelectorAll(".router").forEach((item, index) => {
+                    item.addEventListener('click', function (e) {
+                        let event = e || window.event
+                        // console.log(event)      // 点击事件对象
+                        // 阻止默认事件 event.preventDefault(); 默认事件:浏览器默认右键菜单、a标签默认链接跳转...
+                        event.preventDefault()   // 取消默认跳转
+
+                        // 点击前hash
+                        // console.log('hash: ' + window.location.hash)
+
+                        // this 点击的标签对象 => 获取点击的hash => 将点击的hash赋值给 window.location.hash
+                        window.location.hash = this.getAttribute('href')
+
+                        // console.log('hash: ' + window.location.hash)
+                    }, false)
+                })
+
+                // hash 值发生改变可以通过 hashchange 事件监听到
+                window.addEventListener('hashchange', () => {
+                    // console.log('hash值改变')
+                    vue.routerChange()
+                })
+
+                // 默认执行一次
+                vue.routerChange()
+            }
+
+            vue.routerChange = function () {
+                let nowHash = window.location.hash
+                let index = vue.routes.findIndex((item, index) => {
+                    return nowHash == ('#' + item.path)
+                })
+
+                // console.log(nowHash)  // #/home 当前hash
+                // console.log(index)    // 0      当前索引 0
+
+
+                if (index >= 0) {
+                    // 根据当前的 hash 匹配相应的 html 内容，然后用 innerHTML 把 html 内容放进 router-view 里面
+                    document.querySelector('#router-view').innerHTML = vue.routes[index].component
+                } else {
+                    // hash 如果 和 定义的不同 => 通配符
+                    let defaultIndex = vue.routes.findIndex((item, index) => {
+                        // 任何其它 路径
+                        return item.path == '*'  // 通配符
+                    })
+                    // hash 不匹配跳转到主页 /home
+                    if (defaultIndex >= 0) {
+                        // console.log(defaultIndex)  // 4
+                        window.location.hash = vue.routes[defaultIndex].redirect
+                        // 设置hash后，被监听到了，再执行一次 routerChange()
+                    }
+                }
+            }
+
+            // 调用初始化函数
+            vue.init()
+        }
+
+        new Vue({
+            // 定义一个数组
+            routes: [{
+                path: '/home',
+                component: "<h1>主页</h1>"
+            }, {
+                path: '/product',
+                component: "<h1>产品</h1>"
+            }, {
+                path: '/news',
+                component: '<h1>新闻</h1>'
+            }, {
+                path: '/about',
+                component: '<h1>关于</h1>'
+            }, {
+                path: '*',
+                redirect: '/home'
+            }]
+        })
+    </script>
+</body>
+
+</html>

@@ -102,6 +102,7 @@
 
             if (!this.routerMap.length) {
                 var selector = this.routerViewId + " .page"
+                console.log(selector)
                 var pages = document.querySelectorAll(selector)
                 for (var i = 0; i < pages.length; i++) {
                     var page = pages[i];
