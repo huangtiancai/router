@@ -18,5 +18,4 @@ console.log('search:' + location.search)       // ''
 // location.hash
 // location.search
 
-
 console.log(window.history)  // history 对象
