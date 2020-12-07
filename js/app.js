@@ -18,4 +18,9 @@ console.log('search:' + location.search)       // ''
 // location.hash
 // location.search
 
-console.log(window.history)  // history 对象
+console.log(window.history)   // history 对象 
+console.log(history)          // history 对象 window.history = history
+console.log(history.length)   // history.length 只读属性
+console.log(history.state)    // history.state  null ?
+
+
