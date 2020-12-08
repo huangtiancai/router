@@ -21,12 +21,18 @@ var util = {
     if (r != null) return unescape(r[2]); return null;
   },
   getParamsUrl() {
-    // location.hash(路由处理函数中设置)
-    console.log(location.hash) // #/home
+    // location.hash(路由处理函数中设置,可能会带有参数)
+    console.log(location.hash) // #/home    
     var hashDeatail = location.hash.split("?"),
       hashName = hashDeatail[0].split("#")[1], //路由地址
       params = hashDeatail[1] ? hashDeatail[1].split("&") : [], //参数内容
       query = {};
+
+    console.log(hashDeatail) // Array [ "#/home" ]
+    console.log(hashName)    // /home
+    console.log(params)      // Array []
+    console.log(query)       // Object {  }
+
     for (var i = 0; i < params.length; i++) {
       var item = params[i].split("=");
       query[item[0]] = item[1]
@@ -60,15 +66,16 @@ var util = {
 
 // 构造函数 Router
 function Router() {
+  this.routerViewId = "#routerView"   // 路由挂载点 
   this.routerMap = []                 // 路由遍历
-  this.redirectRoute = null           // 路由重定向的 hash
   this.routes = {}                    // 保存注册的所有路由
+  this.redirectRoute = null           // 路由重定向的 hash
+  this.history = []                   // 路由历史
+  this.stackPages = true              // 多级页面缓存
+
   this.beforeFun = null               // 切换前
   this.afterFun = null                // 切换后
-  this.routerViewId = "#routerView"   // 路由挂载点 
-  this.stackPages = true              // 多级页面缓存
   this.historyFlag = ''               // 路由状态，前进，回退，刷新
-  this.history = []                   // 路由历史
   this.animationName = "slide"        // 页面切换时的动画
 }
 
@@ -151,17 +158,28 @@ Router.prototype = {
   // 路由历史纪录变化
   historyChange: function (e) {
     console.log('historyChange')
-    // 获得当前需要跳转的hash
+    // 1.获得当前需要跳转的hash
     var currentHash = util.getParamsUrl()
-    console.log(currentHash)  // Object { path: undefined, query: {}, params: [] }
+    console.log(currentHash)
+    // 第一次：Object { path: undefined, query: {}, params: [] }
+    //        Object { path: "/home", query: { }, params: [] }
 
-    // 核心代码
+    // 2.处理历史路由
     var nameStr = "router-" + (this.routerViewId) + '-history'  // router-#routerView-history
-    console.log(this.history) // []
-    console.log(window.sessionStorage[nameStr])  // undefined
+    console.log(this.history)
+    // []  =>  Array [{...}]
+    //        0: Object { query: {} }
+    //        length: 1
+
+    console.log(window.sessionStorage[nameStr])  // undefined => {"query":{}}]
 
     this.history = window.sessionStorage[nameStr] ? JSON.parse(window.sessionStorage[nameStr]) : []
-    console.log(this.history) // Array []
+    console.log(this.history)
+    console.log(this.history.length)  // 1 / 2
+    // Array []=> Array [ {…} ]
+    //              0: Object { query: { } }
+    //              1: Object { key: undefined, hash: "/home", query: { } }
+    //              length: 2
 
     var
       back = false,
@@ -169,12 +187,18 @@ Router.prototype = {
       forward = false,
       index = 0,
       len = this.history.length
+    console.log(len) // 1
 
-
+    // 遍历路由历史
     for (var i = 0; i < len; i++) {
       var h = this.history[i]
-      // url 存在于浏览记录中
+      // 路由历史记录每一项 与 当前路由比较
+
+      console.log(h.hash, currentHash.path)
+      console.log(h.key, currentHash.query.key)
+
       if (h.hash === currentHash.path && h.key === currentHash.query.key) {
+        console.log('url 存在于浏览记录中,且key值相等')
         index = i
         if (i === len - 1) {
           // url 在浏览记录的末端即为刷新
@@ -185,17 +209,20 @@ Router.prototype = {
         }
         break
       } else {
-        // url 不存在于浏览记录中即为前进
+        console.log('url 不存在于浏览记录中即为前进')
         forward = true
       }
     }
     // 路由数组操作
     if (back) {
+      console.log('back')
       this.historyFlag = 'back'
       this.history.length = index + 1
     } else if (refresh) {
+      console.log('refresh')
       this.historyFlag = 'refresh'
     } else {
+      console.log('forward')
       this.historyFlag = 'forward'
       var item = {
         key: currentHash.query.key,
@@ -203,6 +230,7 @@ Router.prototype = {
         query: currentHash.query
       }
       this.history.push(item)
+      console.log(this.history)
     }
     // ?
     if (!this.stackPages) {
@@ -213,13 +241,16 @@ Router.prototype = {
     console.log(window.sessionStorage[nameStr])  // [{"query":{}}]
     this.urlChange()
   },
+  // 视图渲染
   changeView: function (currentHash) {
     console.log('changeView')
 
     var pages = document.getElementsByClassName('page')
     var previousPage = document.getElementsByClassName('current')[0]
+
     var currentPage = null
     var currHash = null
+
     for (var i = 0; i < pages.length; i++) {
       var page = pages[i];
       var hash = page.getAttribute('data-hash')
@@ -229,6 +260,7 @@ Router.prototype = {
         currentPage = page
       }
     }
+
     var enterName = 'enter-' + this.animationName
     var leaveName = 'leave-' + this.animationName
     if (this.historyFlag === 'back') {
@@ -266,10 +298,19 @@ Router.prototype = {
     var currentHash = util.getParamsUrl();
     console.log(currentHash)
 
+    console.log(this.routes)
+    // "/detail": Object {callback: callback(route)}
+    // "/detail2": Object { callback: callback(route)}
+    // "/home": Object {callback: callback(route)}
+    // "/list": Object { callback: callback(route)}
+    console.log(this.routes[currentHash.path])
+
+    // 根据对象属性（path） 取 callback (页面定义)
     if (this.routes[currentHash.path]) {
       console.log('1111111111111111111111')
       var self = this;
       if (this.beforeFun) {
+        console.log('this.beforeFun exist')
         this.beforeFun({
           to: {
             path: currentHash.path,
@@ -280,6 +321,7 @@ Router.prototype = {
           }
         })
       } else {
+        console.log('this.beforeFun is not exist')
         this.changeView(currentHash)
       }
     } else {
