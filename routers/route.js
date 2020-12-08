@@ -23,7 +23,6 @@ var util = {
   getParamsUrl() {
     // location.hash(路由处理函数中设置)
     console.log(location.hash) // #/home
-
     var hashDeatail = location.hash.split("?"),
       hashName = hashDeatail[0].split("#")[1], //路由地址
       params = hashDeatail[1] ? hashDeatail[1].split("&") : [], //参数内容
