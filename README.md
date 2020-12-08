@@ -83,10 +83,6 @@ history.replaceState(state Object,title,url)
 url中的 # => 文章的各个标题之间的跳转等等 => 锚点
 路由里面的 # 不叫锚点 => hash => hash值发生变化时,可以通过 hashchange 事件监听到，从而在回调函数里面触发某些方法
 
-
-
-
-
 ```javascript
 window.location.href = './mobile/index.html';
 

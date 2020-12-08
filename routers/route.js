@@ -21,6 +21,7 @@ var util = {
     if (r != null) return unescape(r[2]); return null;
   },
   getParamsUrl() {
+    // location.hash(路由处理函数中设置)
     console.log(location.hash) // #/home
     var hashDeatail = location.hash.split("?"),
       hashName = hashDeatail[0].split("#")[1], //路由地址
@@ -60,11 +61,11 @@ var util = {
 // 构造函数 Router
 function Router() {
   this.routerMap = []                 // 路由遍历
+  this.redirectRoute = null           // 路由重定向的 hash
   this.routes = {}                    // 保存注册的所有路由
   this.beforeFun = null               // 切换前
   this.afterFun = null                // 切换后
   this.routerViewId = "#routerView"   // 路由挂载点 
-  this.redirectRoute = null           // 路由重定向的 hash
   this.stackPages = true              // 多级页面缓存
   this.historyFlag = ''               // 路由状态，前进，回退，刷新
   this.history = []                   // 路由历史
@@ -79,13 +80,13 @@ function Router() {
 Router.prototype = {
   init: function (config) {
     console.log('init')
+
     // console.log(config)  // 传入的配置参数
     var self = this
 
     this.routerMap = config ? config.routes : this.routerMap
     this.routerViewId = config ? config.routerViewId : this.routerViewId
     this.stackPages = config ? config.stackPages : this.stackPages
-
 
     // 获取视图上动画名
     var name = document.querySelector('#routerView').getAttribute('data-animationName') // fade
@@ -129,14 +130,22 @@ Router.prototype = {
 
     // 页面首次加载，匹配路由
     window.addEventListener('load', function (e) {
-      console.log('load', e)
+      console.log('加载', e)
       self.historyChange(e)
     }, false)
 
     // 路由切换
     window.addEventListener('hashchange', function (e) {
-      console.log('hashchange', e)
+      // 注意分析 e
+      console.log('The hash has changed!')
+      console.log(Object.prototype.toString.call(e)) // [object HashChangeEvent]
+      console.log(e)
+      // e 对象两个参数
+      // oldURL: "http://127.0.0.1:8088/routers/index.html",
+      // newURL: "http://127.0.0.1:8088/routers/index.html#/home"
+
       self.historyChange(e)
+
     }, false)
   },
   // 路由历史纪录变化
@@ -274,12 +283,13 @@ Router.prototype = {
         this.changeView(currentHash)
       }
     } else {
-      console.log('2222222222222222222222')
-      //不存在的地址,重定向到默认页面
-      console.log(this.redirectRoute) // #/home
-      console.log(location.hash) // ''
+      // 首次进入会重定向到 #/home 即 http://127.0.0.1:8088/routers/index.html => http://127.0.0.1:8088/routers/index.html#/home
+      console.log('重定向')
+      // 不存在的地址,重定向到默认页面  this.redirectRoute 设置好的重定向路由hash
+      console.log(location.hash)          // ''
+      // 设置当前路由为重定向的路由
       location.hash = this.redirectRoute
-      console.log(location.hash) // #/home
+      console.log(location.hash)          // #/home
     }
   },
   // 路由注册
@@ -291,12 +301,16 @@ Router.prototype = {
     for (var i = 0; i < this.routerMap.length; i++) {
       var route = this.routerMap[i]
 
+      // 路由数组遍历
       if (route == 'redirect') {
-        // 路由重定向的 hash
+        // 当前路由等于 'redirect'则路由重定向的 hash = 当前路径
         this.redirectRoute = route.path
       } else {
+        // 否则等于路由数组第一项
         this.redirectRoute = this.routerMap[0].path
       }
+      console.log(this.redirectRoute) // /home
+
       // console.log(JSON.stringify(route)) // {"path":"/home","name":"home"}
       var newPath = route.path
       var path = newPath.replace(/\s*/g, "")  // 过滤空格
